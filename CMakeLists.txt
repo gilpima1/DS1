@@ -4,5 +4,6 @@ project(DS1)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(DS1 main.cpp
-        AVL.cpp
-        AVL.h)
+        AVL.h
+        data_types.h
+)

@@ -1,19 +1,24 @@
+template<class Key, class Value>
 struct Node {
-    int data;
+    Key key;
+    Value data;
     int height;
-    Node* left;
-    Node* right;
+    Node<Key, Value>* left;
+    Node<Key, Value>* right;
 
-    Node(int data, Node* left = nullptr, Node* right = nullptr) : data(data), height(1), left(left), right(right){}
-    Node(int data, int height, Node* left = nullptr, Node* right = nullptr) : data(data), height(height), left(left), right(right){}
+    Node(Key key, Value data, Node<Key, Value>* left = nullptr, Node<Key, Value>* right = nullptr) :
+    key(key), data(data), height(1), left(left), right(right){}
+    Node(Key key, Value data, int height, Node<Key, Value>* left = nullptr, Node<Key, Value>* right = nullptr) :
+    key(key), data(data), height(height), left(left), right(right){}
 
     ~Node() = default;
 };
 
+template<class Key, class Value>
 class AVL {
-    Node* root;
+    Node<Key, Value>* root;
 
-    void destroyTree(Node* node = nullptr) {
+    void destroyTree(Node<Key, Value>* node = nullptr) {
         if (node == nullptr) {
             return;
         }
@@ -28,18 +33,18 @@ class AVL {
         delete node;
     }
 
-    int getHeight(Node* node) {
+    int getHeight(Node<Key, Value>* node) {
         if (node == nullptr) {return 0;}
         return node->height;
     }
-    int getBalance(Node* node) {
+    int getBalance(Node<Key, Value>* node) {
         if (node == nullptr) {return 0;}
         return getHeight(node->left) - getHeight(node->right);
     }
 
-    Node* rightRotate(Node* y) {
-        Node* x = y->left;
-        Node* T2 = x->right;
+    Node<Key, Value>* rightRotate(Node<Key, Value>* y) {
+        Node<Key, Value>* x = y->left;
+        Node<Key, Value>* T2 = x->right;
 
         x->right = y;
         y->left = T2;
@@ -54,9 +59,9 @@ class AVL {
 
         return x;
     }
-    Node* leftRotate(Node* x) {
-        Node* y = x->right;
-        Node* T2 = y->left;
+    Node<Key, Value>* leftRotate(Node<Key, Value>* x) {
+        Node<Key, Value>* y = x->right;
+        Node<Key, Value>* T2 = y->left;
 
         y->left = x;
         x->right = T2;
@@ -71,7 +76,7 @@ class AVL {
 
         return y;
     }
-    Node* balanceTree(Node* node) {
+    Node<Key, Value>* balanceTree(Node<Key, Value>* node) {
         int balance = getBalance(node);
         if (balance == 2 && getBalance(node->left) >= 0) {
             return rightRotate(node);
@@ -88,11 +93,12 @@ class AVL {
         return node;
     }
 
-    Node* insertNode(Node* node, int data) {
-        if (node == nullptr) {return new Node(data);}
+    Node<Key, Value>* insertNode(Node<Key, Value>* node, Key key, Value data) {
+        if (node == nullptr) {return new Node<Key, Value>(key, data);}
 
-        if (data <= node->data){node->left = insertNode(node->left, data);}
-        else {node->right = insertNode(node->right, data);}
+        if (key < node->key){node->left = insertNode(node->left, key, data);}
+        else if (key > node->key) {node->right = insertNode(node->right, key, data);}
+        else {return node;}
 
         int leftH = getHeight(node->left);
         int rightH = getHeight(node->right);
@@ -104,44 +110,45 @@ class AVL {
 
         return balanceTree(node);
     }
-    bool findNode(Node* node, int data) {
+    Node<Key, Value>* findNode(Node<Key, Value>* node, Key key) {
         if (node == nullptr) {
-            return false;
+            return nullptr;
         }
 
-        if (node->data == data) {
-            return true;
+        if (node->key == key) {
+            return node;
         }
 
-        if (data <= node->data) {
-            return findNode(node->left, data);
+        if (key < node->key) {
+            return findNode(node->left, key);
         } else {
-            return findNode(node->right, data);
+            return findNode(node->right, key);
         }
     }
-    Node* removeNode(Node* node, int data) {
+    Node<Key, Value>* removeNode(Node<Key, Value>* node, Key key) {
         if (node == nullptr) {return node;}
 
-        if (data < node->data) {
-            node->left = removeNode(node->left, data);
-        } else if (data > node->data) {
-            node->right = removeNode(node->right, data);
+        if (key < node->key) {
+            node->left = removeNode(node->left, key);
+        } else if (key > node->key) {
+            node->right = removeNode(node->right, key);
         } else {
             if (node->left == nullptr) {
-                Node* temp = node->right;
+                Node<Key, Value>* temp = node->right;
                 delete node;
                 return temp;
             } else if (node->right == nullptr) {
-                Node* temp = node->left;
+                Node<Key, Value>* temp = node->left;
                 delete node;
                 return temp;
             } else {
-                Node* temp = node->right;
+                Node<Key, Value>* temp = node->right;
                 while (temp->left != nullptr) {
                     temp = temp->left;
                 }
+                node->key = temp->key;
                 node->data = temp->data;
-                node->right = removeNode(node->right, temp->data);
+                node->right = removeNode(node->right, temp->key);
             }
         }
 
@@ -162,23 +169,22 @@ class AVL {
 
 public:
     AVL() : root(nullptr){}
-    AVL(int data) : root(new Node(data)){}
 
     ~AVL() {
         destroyTree(this->root);
     }
 
-    void insert(int data) {
-        this->root = insertNode(this->root, data);
+    void insert(Key key, Value data) {
+        this->root = insertNode(this->root, key, data);
     }
-    bool find(int data) {
+    Node<Key, Value>* find(Key key) {
         if (this->root == nullptr) {
-            return false;
+            return nullptr;
         }
 
-        return findNode(this->root, data);
+        return findNode(this->root, key);
     }
-    void remove(int data) {
-        this->root = removeNode(this->root, data);
+    void remove(Key key) {
+        this->root = removeNode(this->root, key);
     }
 };
