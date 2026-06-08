@@ -47,6 +47,7 @@ StatusType SegmentationResort::checkIn(int geustId, int roomNum)
     //TODO: AVL insert doesnt return the new node, redundant find calls to check if exist etc.
     // maybe return the added node in the insert method and then we can just check if it is equal to null to check
     // if the insert failed.
+    // also, need to update the room sorted list, cannot do that outside of the avl tree (knowing the parent node)
     rooms.insert(roomNum, newRoom);
     guests.insert(geustId, newGuest);
     return StatusType::SUCCESS;
