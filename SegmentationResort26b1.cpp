@@ -58,12 +58,13 @@ StatusType SegmentationResort::checkOut(int geustId)
         return StatusType::INVALID_INPUT;
     }
 
-    bool guestNotExist = guests.find(geustId) == nullptr;
+    auto guestNode = guests.find(geustId);
+    bool guestNotExist = guestNode == nullptr;
     if (guestNotExist) {
         return StatusType::FAILURE;
     }
 
-    auto guest = guests.find(geustId)->data;
+    auto guest = guestNode->data;
     bool guestInDiningRoom = guest->activeTable != nullptr;
     if (guestInDiningRoom) {
         return StatusType::FAILURE;
@@ -124,12 +125,13 @@ StatusType SegmentationResort::removeTable(int tableId)
         return StatusType::INVALID_INPUT;
     }
 
-    bool tableNotExist = tables.find(tableId) == nullptr;
+    auto tableNode = tables.find(tableId);
+    bool tableNotExist = tableNode == nullptr;
     if (tableNotExist) {
         return StatusType::FAILURE;
     }
 
-    auto table = tables.find(tableId)->data;
+    auto table = tableNode->data;
     if (table->currentCount > 0) {
         return StatusType::FAILURE;
     }
@@ -140,12 +142,96 @@ StatusType SegmentationResort::removeTable(int tableId)
 
 StatusType SegmentationResort::enterDiningRoom(int guestId, int tableId)
 {
-    return StatusType::FAILURE;
+    if (guestId <= 0 || tableId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    auto tableNode = tables.find(tableId);
+    bool tableNotExist = tableNode == nullptr;
+    if (tableNotExist) {
+        return StatusType::FAILURE;
+    }
+    auto table = tableNode->data;
+    if (table->currentCount == table->capacity) {
+        return StatusType::FAILURE;
+    }
+
+    auto guestNode = guests.find(guestId);
+    bool guestNotExist = guestNode == nullptr;
+    if (guestNotExist) {
+        return StatusType::FAILURE;
+    }
+
+    // this includes the scenario that the guest is currently at the dining room
+    if (guestNode->data->lastMeal == currentMealIndex) {
+        return StatusType::FAILURE;
+    }
+
+    guestNode->data->activeTable = table;
+    table->currentCount++;
+    auto guest = guestNode->data;
+    table->Guests.insert(guest->GuestID, guest);
+    if (table->head == nullptr) {
+        table->head = guest;
+    }else {
+        auto ptr = table->head;
+        while (ptr->next != nullptr) {
+            if (ptr->next == nullptr) {
+                ptr->next = guest;
+                guest->previous = ptr;
+                break;
+            }
+            ptr = ptr->next;
+        }
+    }
+
+    guestNode->data->lastMeal = currentMealIndex;
+    return StatusType::SUCCESS;
 }
 
 StatusType SegmentationResort::leaveDiningRoom(int guestId, int tableId)
 {
-    return StatusType::FAILURE;
+    if (guestId <= 0 || tableId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    auto tableNode = tables.find(tableId);
+    bool tableNotExist = tableNode == nullptr;
+    if (tableNotExist) {
+        return StatusType::FAILURE;
+    }
+    auto guestNode = guests.find(guestId);
+    bool guestNotExist = guestNode == nullptr;
+    if (guestNotExist) {
+        return StatusType::FAILURE;
+    }
+
+    auto table = tableNode->data;
+
+    bool guestNotAtTable = table->Guests.find(guestId) == nullptr;
+    if (guestNotAtTable) {
+        return StatusType::FAILURE;
+    }
+
+    guestNode->data->activeTable = nullptr;
+    table->currentCount--;
+    table->Guests.remove(guestId);
+
+    //maintain the guest linked list.
+    auto ptr = table->head;
+    while (ptr != nullptr) {
+        if (ptr == guestNode->data) {
+            if (guestNode->data->next != nullptr) {
+                guestNode->data->next->previous = guestNode->data->previous;
+            }
+            if (guestNode->data->previous != nullptr) {
+                guestNode->data->previous->next = guestNode->data->next;
+            }
+            break;
+        }
+    }
+
+    return StatusType::SUCCESS;
 }
 
 StatusType SegmentationResort::reheatFood()
