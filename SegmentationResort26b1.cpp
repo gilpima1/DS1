@@ -10,17 +10,54 @@ SegmentationResort::SegmentationResort() : currentMealIndex(0), firstRoom(nullpt
 
 SegmentationResort::~SegmentationResort()
 {
-    
+
 }
 
 StatusType SegmentationResort::checkIn(int geustId, int roomNum)
 {
-    return StatusType::FAILURE;
+    if (geustId <= 0 || roomNum <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    bool guestAlreadyExist = guests.find(geustId) != nullptr;
+    if (guestAlreadyExist) {
+        return StatusType::FAILURE;
+    }
+
+    bool roomAlreadyExist = rooms.find(roomNum) != nullptr;
+    if (roomAlreadyExist) {
+        return StatusType::FAILURE;
+    }
+
+    //TODO: AVL insert doesnt return the new node, redundant find calls to check if exist etc.
+    // maybe return the added node in the insert method and then we can just check if it is equal to null to check
+    // if the insert failed.
+    rooms.insert(roomNum, new Room(roomNum));
+    guests.insert(geustId, new Guest(geustId, roomNum));
+    return StatusType::SUCCESS;
 }
 
 StatusType SegmentationResort::checkOut(int geustId)
 {
-    return StatusType::FAILURE;
+    if (geustId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    bool guestNotExist = guests.find(geustId) == nullptr;
+    if (guestNotExist) {
+        return StatusType::FAILURE;
+    }
+
+    auto guest = guests.find(geustId)->data;
+    bool guestInDiningRoom = guest->activeTable != nullptr;
+    if (guestInDiningRoom) {
+        return StatusType::FAILURE;
+    }
+
+    rooms.remove(guest->roomNum);
+    guests.remove(geustId);
+
+    return StatusType::SUCCESS;
 }
 
 StatusType SegmentationResort::addTable(int tableId, int capacity)
