@@ -42,7 +42,7 @@ StatusType SegmentationResort::checkIn(int geustId, int roomNum)
         delete newRoom;
         return StatusType::ALLOCATION_ERROR;
     }
-    
+
     //TODO: AVL insert doesnt return the new node, redundant find calls to check if exist etc.
     // maybe return the added node in the insert method and then we can just check if it is equal to null to check
     // if the insert failed.
@@ -76,12 +76,44 @@ StatusType SegmentationResort::checkOut(int geustId)
 
 StatusType SegmentationResort::addTable(int tableId, int capacity)
 {
-    return StatusType::FAILURE;
+    if (tableId <= 0 || capacity <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    bool tableAlreadyExist = tables.find(tableId) != nullptr;
+    if (tableAlreadyExist) {
+        return StatusType::FAILURE;
+    }
+
+    Table* newTable;
+    try {
+        newTable = new Table(tableId, capacity);
+    }catch (std::bad_alloc e) {
+        return StatusType::ALLOCATION_ERROR;
+    }
+
+    tables.insert(tableId, newTable);
+    return StatusType::SUCCESS;
 }
 
 StatusType SegmentationResort::removeTable(int tableId)
 {
-    return StatusType::FAILURE;
+    if (tableId <=0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    bool tableNotExist = tables.find(tableId) == nullptr;
+    if (tableNotExist) {
+        return StatusType::FAILURE;
+    }
+
+    auto table = tables.find(tableId)->data;
+    if (table->currentCount > 0) {
+        return StatusType::FAILURE;
+    }
+
+    tables.remove(tableId);
+    return StatusType::SUCCESS;
 }
 
 StatusType SegmentationResort::enterDiningRoom(int guestId, int tableId)
