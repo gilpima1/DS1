@@ -29,11 +29,25 @@ StatusType SegmentationResort::checkIn(int geustId, int roomNum)
         return StatusType::FAILURE;
     }
 
+    Room* newRoom;
+    Guest* newGuest;
+    try {
+        newRoom = new Room(roomNum);
+    }catch (std::bad_alloc e) {
+        return StatusType::ALLOCATION_ERROR;
+    }
+    try {
+        newGuest = new Guest(geustId, roomNum);
+    }catch (std::bad_alloc e) {
+        delete newRoom;
+        return StatusType::ALLOCATION_ERROR;
+    }
+    
     //TODO: AVL insert doesnt return the new node, redundant find calls to check if exist etc.
     // maybe return the added node in the insert method and then we can just check if it is equal to null to check
     // if the insert failed.
-    rooms.insert(roomNum, new Room(roomNum));
-    guests.insert(geustId, new Guest(geustId, roomNum));
+    rooms.insert(roomNum, newRoom);
+    guests.insert(geustId, newGuest);
     return StatusType::SUCCESS;
 }
 
