@@ -29,6 +29,7 @@ StatusType SegmentationResort::checkIn(int geustId, int roomNum)
         return StatusType::FAILURE;
     }
 
+    //TODO: next and previous (for both room and guest) need to be set at the AVL tree level (where the parent node is known)
     Room* newRoom;
     Guest* newGuest;
     try {
@@ -68,6 +69,27 @@ StatusType SegmentationResort::checkOut(int geustId)
         return StatusType::FAILURE;
     }
 
+    //TODO: keep pointer at guest to room instead of just room num?
+    auto room = rooms.find(guest->roomNum)->data;
+    if (room == firstRoom) {
+        firstRoom = room->next;
+    }
+
+    if (lastRoomCleaned == room) {
+        lastRoomCleaned = room->next;
+        lastRoomIsClean = false;
+    }
+    if (room->next != nullptr && room->previous != nullptr) {
+        room->next->previous = room->previous;
+        room->previous->next = room->next;
+    }else {
+        if (room->next != nullptr) {
+            room->next->previous = nullptr;
+        }
+        if (room->previous != nullptr) {
+            room->previous->next = nullptr;
+        }
+    }
     rooms.remove(guest->roomNum);
     guests.remove(geustId);
 

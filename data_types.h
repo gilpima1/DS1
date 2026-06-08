@@ -26,6 +26,7 @@ struct Table {
 struct Room {
     int roomNumber;
     Room* next;
+    Room* previous;
 
-    Room(int roomNumber) : roomNumber(roomNumber), next(nullptr){}
+    Room(int roomNumber) : roomNumber(roomNumber), next(nullptr), previous(nullptr){}
 };
