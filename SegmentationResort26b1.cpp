@@ -236,7 +236,8 @@ StatusType SegmentationResort::leaveDiningRoom(int guestId, int tableId)
 
 StatusType SegmentationResort::reheatFood()
 {
-    return StatusType::FAILURE;
+    currentMealIndex++;
+    return StatusType::SUCCESS;
 }
 
 StatusType SegmentationResort::joinTables(int tableId1, int tableId2)
@@ -251,5 +252,26 @@ output_t<int> SegmentationResort::joinFriend(int guestId1, int guestId2)
 
 output_t<int> SegmentationResort::cleanNextRoom()
 {
-    return 0;
+    if (lastRoomCleaned != nullptr) {
+        //the pointer to lastRoom was updated (the room was removed) and so the current room wasn't cleaned.
+        if (!lastRoomIsClean) {
+            lastRoomIsClean = true;
+            return StatusType::SUCCESS;
+        }
+
+        //clean current room and set to next
+        lastRoomIsClean = true;
+        lastRoomCleaned = lastRoomCleaned->next;
+        return StatusType::SUCCESS;
+    }
+
+    //no rooms
+    if (firstRoom == nullptr) {
+        return StatusType::FAILURE;
+    }
+
+    lastRoomCleaned = firstRoom;
+    lastRoomIsClean = true;
+    //TODO: I DIDNT GET WHAT SHOULD BE RETURNED HERE, SUCCESS?
+    return firstRoom->roomNumber;
 }
