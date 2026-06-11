@@ -28,11 +28,7 @@ private:
     Room* lastRoomCleaned;
     bool lastRoomIsClean;
 
-public:
-    SegmentationResort();
-    virtual ~SegmentationResort();
-    StatusType checkIn(int guestId,int roomNum);
-    
+
 public:
     // <DO-NOT-MODIFY> {
     SegmentationResort();

@@ -33,6 +33,13 @@ class AVL {
         delete node;
     }
 
+    void deleteDataPointers(Node<Key, Value>* node) {
+        if (node == nullptr) return;
+        deleteDataPointers(node->left);
+        deleteDataPointers(node->right);
+        delete node->data;
+    }
+
     int getHeight(Node<Key, Value>* node) {
         if (node == nullptr) {return 0;}
         return node->height;
@@ -166,12 +173,47 @@ class AVL {
 
         return balanceTree(node);
     }
+    void storeInOrderRecursive(Node<Key, Value>* node, Value* array, int& index) {
+        if (node == nullptr) {
+            return;
+        }
+
+        storeInOrderRecursive(node->left, array, index);
+        array[index] = node->data;
+        index++;
+        storeInOrderRecursive(node->right, array, index);
+    }
+    Node<Key, Value>* buildFromArraysRecursive(Key* keys, Value* values, int start, int end) {
+        if (start > end) {
+            return nullptr;
+        }
+
+        int mid = start + (end - start) / 2;
+
+        Node<Key, Value>* leftChild = buildFromArraysRecursive(keys, values, start, mid - 1);
+        Node<Key, Value>* rightChild = buildFromArraysRecursive(keys, values, mid + 1, end);
+
+        Node<Key, Value>* node = new Node<Key, Value>(keys[mid], values[mid], leftChild, rightChild);
+
+        int leftH = getHeight(leftChild);
+        int rightH = getHeight(rightChild);
+        if (leftH > rightH) {
+            node->height = leftH + 1;
+        } else {
+            node->height = rightH + 1;
+        }
+
+        return node;
+    }
 
 public:
     AVL() : root(nullptr){}
 
     ~AVL() {
         destroyTree(this->root);
+    }
+    void clearAllData() {
+        deleteDataPointers(this->root);
     }
 
     void insert(Key key, Value data) {
@@ -186,5 +228,32 @@ public:
     }
     void remove(Key key) {
         this->root = removeNode(this->root, key);
+    }
+    Node<Key, Value>* findPredecessor(Key key) {
+        Node<Key, Value>* pred = nullptr;
+        Node<Key, Value>* curr = root;
+        while (curr != nullptr) {
+            if (curr->key < key) {
+                pred = curr;
+                curr = curr->right;
+            } else {
+                curr = curr->left;
+            }
+        }
+        return pred;
+    }
+    void storeInOrder(Value* array) {
+        int index = 0;
+        storeInOrderRecursive(this->root, array, index);
+    }
+    void buildFromArrays(Key* keys, Value* values, int size) {
+        destroyTree(this->root);
+
+        if (size <= 0) {
+            this->root = nullptr;
+            return;
+        }
+
+        this->root = buildFromArraysRecursive(keys, values, 0, size - 1);
     }
 };
